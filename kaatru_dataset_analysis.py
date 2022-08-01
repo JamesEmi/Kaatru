@@ -8,10 +8,12 @@ Original file is located at
 
 ## Kaatru - An Analysis
 
-The problem statement requires the development of a "a model to find the variables that are significant in the demand for shared bikes", and also requires us to "report appropriate metrics of your model evaluation". Studying the dataset makes it clear that it is a regression problem - the dependent variable is `cnt` , denoting the demand for shared bikes. The independent variables can be termed "features", and this is essentially a problem of ascertaining feature importance. The higher the feature importance score, the more significant it in determining/predicting the dependent variable `cnt`.
+The problem statement requires the development of a "model to find the variables that are significant in the demand for shared bikes", and also requires us to "report appropriate metrics of your model evaluation". Studying the dataset makes it clear that it is a regression problem - the dependent variable is `cnt` , denoting the demand for shared bikes. The independent variables can be termed "features", and this is essentially a problem of ascertaining feature importance. The higher the feature importance score, the more significant it in determining/predicting the dependent variable `cnt`.
 
 A basic exploratory study of the dataset was done on Google Sheets - using Pearson's correlation coefficient and scatter plot graphs. This study was purely meant to visualise and understand trends in the dataset. This was done through individual scatter plots - plotting each feature like `yr` and `temp` against the `cnt` variable. Please [see this doc here](https://docs.google.com/spreadsheets/d/1WUwKtA9XK-rnY-FjhgkuIGdV4pS_wpWCO5aCNf1jSHM/edit?usp=sharing).
 From this basic analysis, it can be seen that features `yr`, `temp`, and `atemp` can be considered important, due to their considerably high PPMC values. We can investigate this matter deeper using advanced tools from the scikit-learn library.
+
+### Analysis using Random Forest model:
 
 A random forest model is to be created to perform feature importance study. First, we’ll import all the required libraries and our dataset:
 """
@@ -39,10 +41,10 @@ Kaatru_data.columns.values
 Kaatru_Xdata = pd.read_csv('/content/Kaatru XDataSet.csv', index_col=False)
 Kaatru_Xdata.head()
 
-"""Below, the dataset is loaded into appropriate variables `X` and `y`."""
-
 Kaatru_data = Kaatru_data.reset_index()
 Kaatru_Xdata = Kaatru_Xdata.reset_index()
+
+"""Below, the dataset is loaded into appropriate variables `X` and `y`."""
 
 X = pd.DataFrame(Kaatru_Xdata.iloc[:,[1,2,3,4,5,6,7,8,9,10,11]], columns=Kaatru_Xdata.columns[1:12].values)
 #Accessing all columns in Kaatru_Xdata using iloc (except index column, with index 0)
@@ -76,6 +78,8 @@ plt.xlabel("Feature Importance")
 
 """This graph shows a plot of the feature importance values - they add up to a total of 1, and represent the relative significance of the independent variables in determining/predicting the dependent variable.
 This feature importance metric is called "Gini importance" (or 'mean decrease impurity'). According to this metric, the top 3 features seem to be `temp`, `yr`, and `atemp`. Variables `season` and `hum` come in next in importance.
+
+### F-Test & Mutual Information:
 
 Now, let's try two other ways of scoring feature importance, and see how they compare with each other and with the results from random forest. For regression, we have F-test and mutual information:
 
@@ -131,6 +135,8 @@ plt.xlabel("Feature Importance")
 
 """This tells us that the important variables according to mutual information method, are `atemp`, `temp`, `yr`, and `season`. This corroborates the F-test results, and increases confidence in the earlier idea that these are the important features for determining `cnt`.
 
+### Analysis using Random Forest Model (input - Normalized Data)
+
 Now we could try to fit a random forest model on the normalised data `normal data` and see if the feature importance changes.
 """
 
@@ -151,11 +157,15 @@ print(rf.feature_importances_)
 total = sum(rf.feature_importances_)
 print(total)
 
+"""It can be seen that the feature importance values ascertained here based on standardised data are very close to the values ascertained earlier based on raw data."""
+
 sort = rf.feature_importances_.argsort()
 plt.barh(normal_data.columns[0:11].values[sort], rf.feature_importances_[sort])
 plt.xlabel("Feature Importance")
 
-"""The important variables according to this analysis, are primarily `temp`, `yr` and `atemp`, followed by `season` and `hum`.
+"""Again, the important variables according to this analysis, are primarily `temp`, `yr` and `atemp`, followed by `season` and `hum`.
+
+### Concluding Remarks:
 
 Three different modes have been employed in this analysis so as to cross-check the accuracy of feature importance order. The convergent solution suggests that `temp`, `atemp`, and `yr` are the top 3 most important features in this dataset, that predict for `cnt`. Among these 3 the exact order of importance is unclear; since the 3 different analyses lead to slight different ranks. A more accurate importance rank can be assigned after model accuracy is increased throguh hyperparameter tuning. As of now, however, this analysis answers the given problem statement, and can be used to reduce feature space and create a better model.
 
